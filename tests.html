@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <style>
+    	html, body { height: 100%; width: 100%;  }
+        pre {
+            padding: 1em;
+            border: 1px solid gray;
+            background-color: #cfcfcf;
+        }
+
+        td {
+            border: 1px solid blue;
+        }
+        #fixture, nav { display: block; border: 1px solid green; overflow: auto; margin: 2em; padding: 2em;}
+        nav { height: 10em; }
+
+        #demo-view, #readme-view { display: none; }       
+
+        #demo-view.active, #readme-view.active { display: block; }
+
+        .foo {
+        	background-color: green;
+        }
+    </style>
+
+</head>
+
+<body>
+
+	<section id="demo-view">
+		<!-- Holds generated demo tests --> 
+	    <nav></nav>
+	    <div id="fixture">
+	    	<div>Tests will execute up here...</div>
+
+		    <table id="myTable">
+		        <tr>
+		            <td>Placeholder table for testing...</td>
+		        </tr>
+		    </table>
+		</div>
+
+	</section>
+
+
+    <script>
+    	// emulate require for this one thing...
+    	var define = function (arr, fn) {
+    		window.DOMModificationTargets = fn();
+    	}
+
+        if (!Array.isArray) {
+            Array.isArray = function (vArg) {
+                return Object.prototype.toString.call(vArg) === "[object Array]";
+            };
+        }
+
+        if (!Object.create) {
+            Object.create = (function () {
+                function F() {}
+
+                return function (o) {
+                    if (arguments.length != 1) {
+                        throw new Error('Object.create implementation only accepts one parameter.');
+                    }
+                    F.prototype = o
+                    return new F()
+                }
+            })()
+        }
+
+        var mixin = function (target, source) {
+            target = target || {};
+            for (var prop in source) {
+                if (typeof source[prop] === 'object') {
+                    target[prop] = mixin(target[prop], source[prop]);
+                } else {
+                    target[prop] = source[prop];
+                }
+            }
+            return target;
+        }
+
+    </script>
+
+    <script src="DOMModificationTargets.js"></script>
+    <script class="test" id="appendToOneElement">
+var appendToOneElement = function () {
+// Create targets from a selector...
+new DOMModificationTargets("#fixture").append("<h1>OK!</h1>");
+}
+    </script>
+
+    <script class="test" id="appendToOneElementViaElement">
+var appendToOneElementViaElement = function () {
+// Create targets via element...
+var fixture = document.getElementById("fixture");
+new DOMModificationTargets(fixture).append("<h2>Added via Element Target</h2>");
+}
+    </script>
+    
+        <script class="test" id="appendToOneElementViaQsa">
+var appendToOneElementViaQsa = function () {
+// Create targets via qsa or array of elements...
+var fixtures = document.querySelectorAll("#fixture");
+new DOMModificationTargets(fixtures).append("<h2>Added via Element Array Target</h2>");
+}
+    </script>
+
+        <script class="test" id="appendToOneElementViaNodeList">
+var appendToOneElementViaNodeList = function () {
+// Create targets via qsa or array of elements...
+var nodelist = document.getElementsByTagName("section");
+new DOMModificationTargets(nodelist).append("<h3 style='color:green'>Added via Element Array Target</h3>");
+}
+    </script>
+    <script class="test" id="appendToText">
+// Works with text...
+var appendToText = function () {
+new DOMModificationTargets("#fixture").append("This is some text...");
+}
+    </script>
+
+
+    <script class="test" id="prependWithElement">
+var prependWithElement = function () {
+// Operations can use elements...
+var element = document.createElement("div");
+element.style.backgroundColor = 'orange';
+element.innerHTML = "Added via element...";
+new DOMModificationTargets("table tr").append(element);
+}
+    </script>
+    
+    <script class="test" id="prependWithArrayOfElement">
+var prependWithArrayOfElement = function () {
+// Operations can use arrays of elements...
+var elements = [document.createElement("div"), document.createElement("div")];
+elements[0].style.backgroundColor = 'orange';
+elements[0].innerHTML = "Added via array of elements[0]...";
+elements[1].style.backgroundColor = 'gray';
+elements[1].innerHTML = "Added via array of elements[1]...";
+new DOMModificationTargets("table tr").append(elements);
+}
+    </script>
+
+ <script class="test" id="prependWithDocumentFragment">
+var prependWithDocumentFragment = function () {
+// Operations can use document fragments...
+var e1, e2, fragment = document.createDocumentFragment();
+e1 = document.createElement('div');
+e2 = document.createElement('div');
+e1.style.border = '1px solid orange';
+e1.innerHTML = "Added via document fragment (e1)...";
+e2.style.border = '1px solid gray';
+e2.innerHTML = "Added via document fragment (e2)...";
+fragment.appendChild(e1);
+fragment.appendChild(e2);
+new DOMModificationTargets("table tr").append(fragment);
+}
+    </script>
+    
+    <script class="test" id="appendToCell">
+// Works with table markup
+var appendToCell = function () {
+    new DOMModificationTargets("table tr").append("<td>This is some text in a table cell...</td>");
+}
+    </script>
+
+
+    <script class="test" id="appendToCells">
+var appendToCells = function () {
+    new DOMModificationTargets("table tr").append("<td>(A) in a table cell...</td><td>(B) in a table cell...</td>");
+}
+    </script>
+
+    <script class="test" id="replaceTableCells">
+var replaceTableCells = function () {
+    new DOMModificationTargets("td").replaceWith("<td>FOO!</td>");
+}
+    </script>
+
+
+    <script class="test" id="addClass">
+var addClass = function () {
+    new DOMModificationTargets("td").addClass("foo");
+}
+    </script>
+
+
+    <script>
+        var testSources = document.querySelectorAll(".test");
+        var nav = document.querySelector("nav");
+        var linksSrc = ["<h2>Some tests...</h2>"];
+        var code;
+        for (var i = 0; i < testSources.length; i++) {
+            code = testSources[i].innerHTML.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+            code = code.replace(/.*\{/,"").replace(/\}$/,"");
+            linksSrc.push("<div>");
+            linksSrc.push("<pre>");
+            linksSrc.push(code.trim());
+            linksSrc.push("</pre>");
+            linksSrc.push("<button onclick=\'" + testSources[i].getAttribute("id") + "();\'>Run</button>")
+            linksSrc.push("</div>");
+        }
+        nav.innerHTML = linksSrc.join("");
+    </script>
+
+</body>
+
+</html>
